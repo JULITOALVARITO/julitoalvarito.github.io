@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tabata Timer</title>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        text-align: center;
+        background-color: #ffe4ec;
+        color: #333;
+        margin: 0;
+        padding: 0;
+    }
+    h1 {
+        margin-top: 20px;
+        font-size: 2rem;
+        color: #b85c8a;
+    }
+    #status {
+        font-size: 1.5rem;
+        margin-top: 20px;
+        color: #b85c8a;
+    }
+    #timer {
+        font-size: 5rem;
+        margin: 30px 0;
+        font-weight: bold;
+    }
+    #round {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+    }
+    button {
+        background-color: #ff9ec4;
+        border: none;
+        padding: 15px 30px;
+        font-size: 1.2rem;
+        border-radius: 30px;
+        cursor: pointer;
+        color: white;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #e889b0;
+    }
+</style>
+</head>
+<body>
+
+<h1>⏱ Tabata Timer</h1>
+<div id="round">Serie 1 de 8</div>
+<div id="status">Listo para empezar</div>
+<div id="timer">20</div>
+<button id="startBtn">Iniciar</button>
+
+<script>
+    let isRunning = false;
+    let isExercise = true;
+    let timeLeft = 20;
+    let round = 1;
+    let maxRounds = 8;
+    let timerInterval;
+
+    const statusEl = document.getElementById('status');
+    const timerEl = document.getElementById('timer');
+    const roundEl = document.getElementById('round');
+    const startBtn = document.getElementById('startBtn');
+
+    function speak(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-ES';
+        speechSynthesis.speak(utterance);
+    }
+
+    function updateDisplay() {
+        timerEl.textContent = timeLeft;
+        roundEl.textContent = `Serie ${round} de ${maxRounds}`;
+    }
+
+    function startTimer() {
+        isRunning = true;
+        startBtn.textContent = 'Pausar';
+        statusEl.textContent = isExercise ? '🏋️ Ejercicio' : '☕ Descanso';
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateDisplay();
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+
+                if (isExercise) {
+                    speak(`Serie ${round} completada, inicia tu descanso`);
+                    statusEl.textContent = '⏳ Preparando descanso...';
+                    timeLeft = 5; // Pausa extra antes de descanso
+                    updateDisplay();
+                    setTimeout(() => {
+                        isExercise = false;
+                        timeLeft = 10; // Descanso real
+                        statusEl.textContent = '☕ Descanso';
+                        startTimer();
+                    }, 5000);
+                } else {
+                    speak("Continúa con tu entrenamiento");
+                    statusEl.textContent = '⏳ Preparando ejercicio...';
+                    timeLeft = 5; // Pausa extra antes del ejercicio
+                    updateDisplay();
+                    setTimeout(() => {
+                        isExercise = true;
+                        round++;
+                        timeLeft = 20;
+                        statusEl.textContent = '🏋️ Ejercicio';
+
+                        if (round > maxRounds) {
+                            speak("Rutina finalizada");
+                            statusEl.textContent = '✅ Finalizado';
+                            startBtn.textContent = 'Iniciar';
+                            isRunning = false;
+                            round = 1;
+                            timeLeft = 20;
+                            isExercise = true;
+                            updateDisplay();
+                            return;
+                        }
+                        startTimer();
+                    }, 5000);
+                }
+            }
+        }, 1000);
+    }
+
+    startBtn.addEventListener('click', () => {
+        if (!isRunning) {
+            startTimer();
+        } else {
+            clearInterval(timerInterval);
+            isRunning = false;
+            startBtn.textContent = 'Iniciar';
+        }
+    });
+
+    updateDisplay();
+</script>
+
+</body>
+</html>
